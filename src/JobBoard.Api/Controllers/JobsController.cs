@@ -20,7 +20,7 @@ public class JobsController : ControllerBase
     public async Task<IActionResult> GetAll(string? location, JobType? type, decimal? minSalary)
     {
         var jobs = await _jobService.GetActiveJobsAsync(location, type, minSalary);
-        return Ok(jobs);
+        return Ok(jobs.Select(JobDto.FromModel));
     }
 
     // GET: api/jobs/{id}
@@ -32,22 +32,26 @@ public class JobsController : ControllerBase
         if (job == null)
             return NotFound();
 
-        return Ok(job);
+        return Ok(JobDto.FromModel(job));
     }
 
     // POST: api/jobs
     [HttpPost]
-    public async Task<IActionResult> Create(JobPosting job)
+    public async Task<IActionResult> Create([FromBody] CreateJobDto dto)
     {
+        var job = dto.ToModel();
         await _jobService.CreateAsync(job);
-        return Ok(job);
+        return Ok(JobDto.FromModel(job));
     }
 
     // PUT: api/jobs/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, JobPosting job)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateJobDto dto)
     {
-        job.Id = id;
+        var job = await _jobService.GetByIdAsync(id);
+        if (job == null)
+            return NotFound();
+        dto.UpdateModel(job);
         await _jobService.UpdateAsync(job);
         return NoContent();
     }
