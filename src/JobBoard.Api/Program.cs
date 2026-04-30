@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using JobBoard.Api.Data;
+using JobBoard.Api.Middleware;
 using JobBoard.Api.Repositories;
 using JobBoard.Api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 
 var app = builder.Build();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -38,3 +40,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+public partial class Program { }

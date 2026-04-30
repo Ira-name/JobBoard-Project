@@ -21,17 +21,17 @@ public class ApplicationService : IApplicationService
         var job = await _jobRepository.GetByIdAsync(jobId);
 
         if (job == null)
-            throw new Exception("Job not found");
+            throw new KeyNotFoundException("Job not found");
 
         // вакансія має бути активна
         if (!job.IsActive || job.ExpiresAt < DateTime.UtcNow)
-            throw new Exception("Cannot apply to inactive or expired job");
+            throw new ArgumentException("Cannot apply to inactive or expired job");
 
         // одна заявка на email
         var exists = await _applicationRepository.ExistsAsync(jobId, application.Email);
 
         if (exists)
-            throw new Exception("Application with this email already exists");
+            throw new ArgumentException("Application with this email already exists");
 
         application.JobPostingId = jobId;
         application.AppliedAt = DateTime.UtcNow;
@@ -51,7 +51,7 @@ public class ApplicationService : IApplicationService
         var application = await _applicationRepository.GetByIdAsync(applicationId);
 
         if (application == null)
-            throw new Exception("Application not found");
+            throw new KeyNotFoundException("Application not found");
 
         application.Status = status;
 
