@@ -38,10 +38,10 @@ public class JobService : IJobService
     public async Task CreateAsync(JobPosting job)
     {
         if (job.SalaryMin >= job.SalaryMax)
-            throw new Exception("SalaryMin must be less than SalaryMax");
+            throw new ArgumentException("SalaryMin must be less than SalaryMax");
 
         if (job.ExpiresAt <= DateTime.UtcNow)
-            throw new Exception("ExpiresAt must be in the future");
+            throw new ArgumentException("ExpiresAt must be in the future");
 
         job.PostedAt = DateTime.UtcNow;
         job.IsActive = true;
@@ -53,7 +53,7 @@ public class JobService : IJobService
     public async Task UpdateAsync(JobPosting job)
     {
         if (job.SalaryMin >= job.SalaryMax)
-            throw new Exception("Invalid salary range");
+            throw new ArgumentException("Invalid salary range");
 
         await _jobRepository.UpdateAsync(job);
         await _jobRepository.SaveChangesAsync();
@@ -64,7 +64,7 @@ public class JobService : IJobService
         var job = await _jobRepository.GetByIdAsync(id);
 
         if (job == null)
-            throw new Exception("Job not found");
+            throw new KeyNotFoundException("Job not found");
 
         job.IsActive = false;
 
