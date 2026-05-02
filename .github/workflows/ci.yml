@@ -63,7 +63,7 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory ./coverage
           --logger "trx;LogFileName=unit.trx"
-          /p:Exclude="[JobBoard.Api]*.Controllers.*,[JobBoard.Api]*.DTO*,[JobBoard.Api]*.Migrations*,[JobBoard.Api]*.Program*"
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Migrations*]*,[*DTOs*]*,[*Dto*]*,[*Data*]*,[Program]*"
 
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
