@@ -1,0 +1,160 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  # ---------------------------
+  # 1. BUILD
+  # ---------------------------
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+  
+  # ---------------------------
+  # 2. UNIT TESTS + COVERAGE
+  # ---------------------------
+  unit-tests:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Run unit tests with coverage
+        run: >
+          dotnet test
+          --filter "Category=Unit"
+          --configuration Release
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage
+          --logger "trx;LogFileName=unit.trx"
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: >
+          reportgenerator
+          -reports:./coverage/**/coverage.cobertura.xml
+          -targetdir:./coverage/report
+          -reporttypes:"Html;TextSummary;Cobertura"
+
+      - name: Show coverage summary
+        run: cat ./coverage/report/Summary.txt
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage/report
+
+      - name: Upload unit test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: ./coverage/**/*.trx
+  
+  # ---------------------------
+  # 3. INTEGRATION TESTS (PostgreSQL)
+  # ---------------------------
+  integration-tests:
+    needs: build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Run integration tests
+        run: >
+          dotnet test
+          --filter "Category=Integration"
+          --configuration Release
+          --logger "trx;LogFileName=integration.trx"
+          --results-directory ./test-results
+        env:
+          ConnectionStrings__Postgres: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpassword"
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: ./test-results/**/*.trx
+  
+  # ---------------------------
+  # 4. QUALITY GATE (coverage >= 75%)
+  # ---------------------------
+  quality-gate:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(grep -oP 'Line coverage:\s+\K[\d.]+' ./coverage/Summary.txt)
+          echo "Coverage: $COVERAGE%"
+          THRESHOLD=75
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "::error::Coverage below threshold"
+            exit 1
+          fi
