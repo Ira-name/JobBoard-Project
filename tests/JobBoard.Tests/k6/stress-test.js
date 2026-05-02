@@ -1,8 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-const BASE_URL = 'https://localhost:44344';
-
+const BASE_URL = __ENV.MY_URL || 'https://localhost:44344';
 export const options = {
     insecureSkipTLSVerify: true,
     thresholds: {

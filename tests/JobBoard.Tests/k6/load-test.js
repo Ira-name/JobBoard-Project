@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
+const BASE_URL = __ENV.MY_URL || 'https://localhost:44344';
 export const options = {
     insecureSkipTLSVerify: true,
     stages: [
@@ -15,7 +16,7 @@ export const options = {
 };
 
 export default function () {
-    const url = 'https://localhost:44344/api/jobs?location=remote';
+    const url = `${BASE_URL}/api/jobs?location=remote`;
 
     const res = http.get(url);
 
