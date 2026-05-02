@@ -219,6 +219,33 @@ public class JobServiceTests
         // Assert
         result.Count().ShouldBe(1);
     }
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task CloseAsync_AlreadyInactive_DoesNothing()
+    {
+        var job = new JobPosting { Id = Guid.NewGuid(), IsActive = false };
+
+        _repo.GetByIdAsync(job.Id).Returns(job);
+
+        await _sut.CloseAsync(job.Id);
+
+        job.IsActive.ShouldBeFalse();
+    }
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task CreateAsync_SetsPostedAt()
+    {
+        var job = new JobPosting
+        {
+            SalaryMin = 1000,
+            SalaryMax = 2000,
+            ExpiresAt = DateTime.UtcNow.AddDays(1)
+        };
+
+        await _sut.CreateAsync(job);
+
+        job.PostedAt.ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-1));
+    }
     
     
 }

@@ -167,4 +167,41 @@ public class ApplicationServiceTests
         // Assert
         app.AppliedAt.ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-1));
     }
+    
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task UpdateStatusAsync_OnlyStatusChanges()
+    {
+        var app = new Application
+        {
+            Id = Guid.NewGuid(),
+            ApplicantName = "Test",
+            Email = "test@mail.com",
+            Status = ApplicationStatus.Pending
+        };
+
+        _appRepo.GetByIdAsync(app.Id).Returns(app);
+
+        await _sut.UpdateStatusAsync(app.Id, ApplicationStatus.Accepted);
+
+        app.Status.ShouldBe(ApplicationStatus.Accepted);
+        app.Email.ShouldBe("test@mail.com");
+        app.ApplicantName.ShouldBe("Test");
+    }
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task ApplyAsync_SetsCorrectJobPostingId()
+    {
+        // Arrange
+        var jobId = Guid.NewGuid();
+        _jobRepo.GetByIdAsync(jobId).Returns(new JobPosting { IsActive = true, ExpiresAt = DateTime.UtcNow.AddDays(1) });
+        _appRepo.ExistsAsync(jobId, Arg.Any<string>()).Returns(false);
+        var app = new Application { Email = "test@mail.com" };
+
+        // Act
+        await _sut.ApplyAsync(jobId, app);
+
+        // Assert
+        app.JobPostingId.ShouldBe(jobId);
+    }
 }
