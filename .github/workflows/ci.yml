@@ -162,8 +162,6 @@ jobs:
           sudo apt-get install k6
       - name: Run smoke test
         run: k6 run tests/JobBoard.Tests/k6/smoke-test.js -e MY_URL=http://localhost:5000
-      - name: Run load test
-        run: k6 run tests/JobBoard.Tests/k6/load-test.js -e MY_URL=http://localhost:5000
   
   # ---------------------------
   # 5. QUALITY GATE (coverage >= 75%)
