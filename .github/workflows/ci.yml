@@ -142,6 +142,21 @@ jobs:
   performance:
     needs: build
     runs-on: ubuntu-latest
+    # 1. ТРЕБА ДОДАТИ СЕРВІС БАЗИ СЮДИ ТАКОЖ
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -149,10 +164,17 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Build and start API
+        env:
+          ConnectionStrings__Postgres: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpassword"
         run: |
           dotnet build src/JobBoard.Api/JobBoard.Api.csproj --configuration Release
+          
+          # Усі команди нижче мають бути чітко під dotnet build
+          dotnet ef database update --project src/JobBoard.Data/JobBoard.Data.csproj --startup-project src/JobBoard.Api/JobBoard.Api.csproj
+          
           dotnet run --project src/JobBoard.Api/JobBoard.Api.csproj --configuration Release --urls "http://localhost:5000" &
-          sleep 20
+          
+          sleep 40
       - name: Install k6
         run: |
           sudo gpg -k
@@ -162,6 +184,8 @@ jobs:
           sudo apt-get install k6
       - name: Run smoke test
         run: k6 run tests/JobBoard.Tests/k6/smoke-test.js -e MY_URL=http://localhost:5000
+      - name: Run load test
+        run: k6 run tests/JobBoard.Tests/k6/load-test.js -e MY_URL=http://localhost:5000
   
   # ---------------------------
   # 5. QUALITY GATE (coverage >= 75%)
