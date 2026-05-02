@@ -36,5 +36,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Application>()
             .HasIndex(a => new { a.JobPostingId, a.Email })
             .IsUnique();
+        modelBuilder.Entity<JobPosting>()
+            .HasIndex(j => j.Location);
     }
 }

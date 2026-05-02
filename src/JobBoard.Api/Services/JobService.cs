@@ -1,5 +1,6 @@
 using JobBoard.Api.Models;
 using JobBoard.Api.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobBoard.Api.Services;
 
@@ -12,22 +13,37 @@ public class JobService : IJobService
         _jobRepository = jobRepository;
     }
 
-    public async Task<IEnumerable<JobPosting>> GetActiveJobsAsync(string? location, JobType? type, decimal? minSalary)
+    /*public async Task<IEnumerable<JobPosting>> GetActiveJobsAsync(string? location, JobType? type, decimal? minSalary)
     {
         var jobs = await _jobRepository.GetAllAsync();
-
-        // деактивує прострочені
-        foreach (var job in jobs)
-        {
-            if (job.ExpiresAt < DateTime.UtcNow)
-                job.IsActive = false;
-        }
-
+        
         return jobs
             .Where(j => j.IsActive)
             .Where(j => location == null || j.Location == location)
             .Where(j => type == null || j.Type == type)
             .Where(j => minSalary == null || j.SalaryMin >= minSalary);
+    }*/
+    
+    public async Task<IEnumerable<JobPosting>> GetActiveJobsAsync(string? location, JobType? type, decimal? minSalary)
+    {
+        var query = _jobRepository.Query(); // повертає IQueryable
+
+        query = query
+            .Where(j => j.IsActive)
+            .Where(j => j.ExpiresAt > DateTime.UtcNow);
+
+        if (location != null)
+            query = query.Where(j => j.Location == location);
+
+        if (type != null)
+            query = query.Where(j => j.Type == type);
+
+        if (minSalary != null)
+            query = query.Where(j => j.SalaryMin >= minSalary);
+
+        return await query
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<JobPosting?> GetByIdAsync(Guid id)

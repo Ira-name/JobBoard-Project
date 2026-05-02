@@ -1,6 +1,7 @@
 using JobBoard.Api.Models;
 using JobBoard.Api.Repositories;
 using JobBoard.Api.Services;
+using MockQueryable.NSubstitute;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -79,7 +80,7 @@ public class JobServiceTests
     }
 
     [Fact]
-    public async Task GetActiveJobsAsync_ExpiredJob_BecomesInactive()
+    public async Task GetActiveJobsAsync_ExpiredJob_IsNotReturned()
     {
         // Arrange
         var jobs = new List<JobPosting>
@@ -90,15 +91,14 @@ public class JobServiceTests
                 ExpiresAt = DateTime.UtcNow.AddDays(-1)
             }
         };
-
-        _repo.GetAllAsync().Returns(jobs);
+        var mock = jobs.AsQueryable().BuildMock();
+        _repo.Query().Returns(mock);
 
         // Act
         var result = await _sut.GetActiveJobsAsync(null, null, null);
 
         // Assert
         result.ShouldBeEmpty();
-        jobs[0].IsActive.ShouldBeFalse();
     }
 
     [Fact]
@@ -210,8 +210,9 @@ public class JobServiceTests
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             }
         };
+        var mock = jobs.AsQueryable().BuildMock();
 
-        _repo.GetAllAsync().Returns(jobs);
+        _repo.Query().Returns(mock);
 
         // Act
         var result = await _sut.GetActiveJobsAsync(null, null, null);
