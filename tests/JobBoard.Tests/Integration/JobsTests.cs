@@ -22,6 +22,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Create_ValidJob_Returns200()
     {
         using var scope = _factory.Services.CreateScope();
@@ -53,6 +54,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     }
     
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task GetAll_FiltersByLocation_ReturnsCorrectJobs()
     {
         using var scope = _factory.Services.CreateScope();
@@ -101,6 +103,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         jobs.ShouldAllBe(j => j.Location == "Lviv");
     }
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Apply_ToJob_Returns200_AndCreatesApplication()
     {
         // Arrange
@@ -146,6 +149,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         application.Status.ShouldBe(ApplicationStatus.Pending);
     }
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Update_Application_Status_Works()
     {
         // Arrange
@@ -201,6 +205,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         updated.Status.ShouldBe(ApplicationStatus.Accepted);
     }
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Cannot_Apply_To_Expired_Job()
     {
         using var scope = _factory.Services.CreateScope();
@@ -239,6 +244,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task GetAll_DoesNotReturnExpiredJobs()
     {
         using var scope = _factory.Services.CreateScope();
@@ -280,6 +286,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     }
     
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Cannot_Apply_Twice_With_Same_Email()
     {
         using var scope = _factory.Services.CreateScope();
@@ -323,6 +330,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         second.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task CreateJob_InvalidSalary_ReturnsBadRequest()
     {
         using var scope = _factory.Services.CreateScope();
@@ -346,6 +354,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Update_Status_For_NonExisting_Application_Returns404()
     {
         var fakeId = Guid.NewGuid();
@@ -361,6 +370,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     }
     
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task Cannot_Apply_To_Inactive_Job()
     {
         using var scope = _factory.Services.CreateScope();
