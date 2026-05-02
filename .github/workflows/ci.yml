@@ -168,6 +168,8 @@ jobs:
           ConnectionStrings__Postgres: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpassword"
         run: |
           dotnet build src/JobBoard.Api/JobBoard.Api.csproj --configuration Release
+          dotnet tool install --global dotnet-ef
+          export PATH="$PATH:$HOME/.dotnet/tools"
           
           # Усі команди нижче мають бути чітко під dotnet build
           dotnet ef database update --project src/JobBoard.Data/JobBoard.Data.csproj --startup-project src/JobBoard.Api/JobBoard.Api.csproj
