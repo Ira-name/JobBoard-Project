@@ -43,4 +43,9 @@ public class JobRepository : IJobRepository
     {
         await _context.SaveChangesAsync();
     }
+    public IQueryable<JobPosting> Query()
+    {
+        return _context.JobPostings
+            .Include(j => j.Company);
+    }
 }

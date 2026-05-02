@@ -9,4 +9,5 @@ public interface IJobRepository
     Task AddAsync(JobPosting job);
     Task UpdateAsync(JobPosting job);
     Task SaveChangesAsync();
+    IQueryable<JobPosting> Query();
 }

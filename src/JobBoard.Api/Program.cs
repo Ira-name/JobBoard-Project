@@ -24,6 +24,7 @@ builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
 builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
+builder.Services.AddScoped<IDataSeedService, DataSeedService>();
 
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -35,9 +36,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    // створить БД + накотить міграції
+    await context.Database.MigrateAsync();
+
+    var seeder = scope.ServiceProvider.GetRequiredService<IDataSeedService>();
+    await seeder.SeedAsync();
+}
 
 app.Run();
 public partial class Program { }
