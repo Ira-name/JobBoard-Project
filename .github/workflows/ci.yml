@@ -150,9 +150,9 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Build and start API
         run: |
-          dotnet build JobBoard.Api --configuration Release
-          dotnet run --project JobBoard.Api --configuration Release &
-          sleep 10
+          dotnet build src/JobBoard.Api/JobBoard.Api.csproj --configuration Release
+          dotnet run --project src/JobBoard.Api/JobBoard.Api.csproj --configuration Release &
+          sleep 15
       - name: Install k6
         run: |
           sudo gpg -k
@@ -161,9 +161,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install k6
       - name: Run smoke test
-        run: k6 run tests/performance/smoke-test.js
+        run: k6 run tests/JobBoard.Tests/k6/smoke-test.js
       - name: Run load test
-        run: k6 run tests/performance/load-test.js
+        run: k6 run tests/JobBoard.Tests/k6/load-test.js
   
   # ---------------------------
   # 5. QUALITY GATE (coverage >= 75%)
