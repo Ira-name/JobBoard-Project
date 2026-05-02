@@ -18,6 +18,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task ApplyAsync_ValidApplication_SavesSuccessfully()
     {
         // Arrange
@@ -47,6 +48,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task ApplyAsync_JobNotFound_ThrowsException()
     {
         // Arrange
@@ -58,6 +60,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task ApplyAsync_InactiveJob_ThrowsException()
     {
         // Arrange
@@ -75,6 +78,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task ApplyAsync_ExpiredJob_ThrowsException()
     {
         // Arrange
@@ -92,6 +96,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task ApplyAsync_DuplicateEmail_ThrowsException()
     {
         // Arrange
@@ -116,6 +121,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task UpdateStatusAsync_ValidApplication_UpdatesStatus()
     {
         // Arrange
@@ -132,6 +138,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task UpdateStatusAsync_NotFound_ThrowsException()
     {
         // Arrange
@@ -143,6 +150,7 @@ public class ApplicationServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task ApplyAsync_SetsAppliedAt()
     {
         // Arrange

@@ -17,6 +17,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CreateAsync_ValidJob_SavesSuccessfully()
     {
         // Arrange
@@ -37,6 +38,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CreateAsync_WhenSalaryMinGreaterThanMax_ShouldThrowException()
     {
         // Arrange
@@ -52,6 +54,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CreateAsync_ExpiredDate_ThrowsException()
     {
         // Arrange
@@ -67,6 +70,7 @@ public class JobServiceTests
     }
     
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CreateAsync_EqualSalary_ThrowsException()
     {
         var job = new JobPosting
@@ -80,6 +84,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task GetActiveJobsAsync_ExpiredJob_IsNotReturned()
     {
         // Arrange
@@ -102,6 +107,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CloseAsync_ValidJob_SetsInactive()
     {
         // Arrange
@@ -120,6 +126,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CloseAsync_JobNotFound_ThrowsException()
     {
         // Arrange
@@ -130,6 +137,7 @@ public class JobServiceTests
     }
 
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task UpdateAsync_InvalidSalary_ThrowsException()
     {
         // Arrange
@@ -144,6 +152,7 @@ public class JobServiceTests
     }
     
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task CreateAsync_InvalidSalary_DoesNotSave()
     {
         // Arrange
@@ -164,6 +173,7 @@ public class JobServiceTests
     [Theory]
     [InlineData(1000, 2000)]
     [InlineData(1, 9999)]
+    [Trait("Category", "Unit")]
     public async Task CreateAsync_ValidSalary_Works(decimal min, decimal max)
     {
         // Arrange
@@ -181,6 +191,7 @@ public class JobServiceTests
         await _repo.Received().AddAsync(job);
     }
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task UpdateAsync_ValidJob_UpdatesSuccessfully()
     {
         // Arrange
@@ -199,6 +210,7 @@ public class JobServiceTests
         await _repo.Received().SaveChangesAsync();
     }
     [Fact]
+    [Trait("Category", "Unit")]
     public async Task GetActiveJobsAsync_ValidJob_ReturnsJob()
     {
         // Arrange
