@@ -136,35 +136,34 @@ jobs:
         with:
           name: integration-test-results
           path: ./test-results/**/*.trx
-          
-    # ---------------------------
-    # 4. PERFORMANCE TESTS (k6)
-    # ---------------------------
-    performance:
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - name: Setup .NET
-          uses: actions/setup-dotnet@v4
-          with:
-            dotnet-version: ${{ env.DOTNET_VERSION }}
-        - name: Build and start API
-          run: |
-            dotnet build JobBoard.Api --configuration Release
-            dotnet run --project JobBoard.Api --configuration Release &
-            sleep 10
-        - name: Install k6
-          run: |
-            sudo gpg -k
-            sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-            echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-            sudo apt-get update
-            sudo apt-get install k6
-        - name: Run smoke test
-          run: k6 run tests/JobBoard.Tests/k6/smoke-test.js
-        - name: Run load test
-          run: k6 run tests/JobBoard.Tests/k6/load-test.js
+  # ---------------------------
+  # 4. PERFORMANCE TESTS (k6)
+  # ---------------------------
+  performance:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Build and start API
+        run: |
+          dotnet build JobBoard.Api --configuration Release
+          dotnet run --project JobBoard.Api --configuration Release &
+          sleep 10
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      - name: Run smoke test
+        run: k6 run tests/performance/smoke-test.js
+      - name: Run load test
+        run: k6 run tests/performance/load-test.js
   
   # ---------------------------
   # 5. QUALITY GATE (coverage >= 75%)
