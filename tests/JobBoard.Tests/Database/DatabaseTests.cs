@@ -42,7 +42,7 @@ public class DatabaseTests : IClassFixture<CustomWebApplicationFactory>
         {
             JobPostingId = job.Id,
             ApplicantName = "Test 2",
-            Email = "dup@test.com", // ❗ дубль
+            Email = "dup@test.com",
             ResumeUrl = "url",
             CoverLetter = "text",
             AppliedAt = DateTime.UtcNow,
@@ -164,7 +164,7 @@ public class DatabaseTests : IClassFixture<CustomWebApplicationFactory>
 
         var application = new Application
         {
-            JobPostingId = Guid.NewGuid(), // ❗ не існує
+            JobPostingId = Guid.NewGuid(), //
             ApplicantName = "Test",
             Email = "test@test.com",
             ResumeUrl = "url",

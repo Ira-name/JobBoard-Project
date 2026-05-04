@@ -50,7 +50,7 @@ public class JobServiceTests
         };
 
         // Act & Assert
-        await Should.ThrowAsync<Exception>(() => _sut.CreateAsync(job));
+        await Should.ThrowAsync<ArgumentException>(() => _sut.CreateAsync(job));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class JobServiceTests
         };
 
         // Act & Assert
-        await Should.ThrowAsync<Exception>(() => _sut.CreateAsync(job));
+        await Should.ThrowAsync<ArgumentException>(() => _sut.CreateAsync(job));
     }
     
     [Fact]
@@ -80,7 +80,7 @@ public class JobServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(1)
         };
 
-        await Should.ThrowAsync<Exception>(() => _sut.CreateAsync(job));
+        await Should.ThrowAsync<ArgumentException>(() => _sut.CreateAsync(job));
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public class JobServiceTests
         };
 
         // Act & Assert
-        await Should.ThrowAsync<Exception>(() => _sut.UpdateAsync(job));
+        await Should.ThrowAsync<ArgumentException>(() => _sut.UpdateAsync(job));
     }
     
     [Fact]
@@ -164,7 +164,7 @@ public class JobServiceTests
         };
 
         // Act
-        await Should.ThrowAsync<Exception>(() => _sut.CreateAsync(job));
+        await Should.ThrowAsync<ArgumentException>(() => _sut.CreateAsync(job));
 
         // Assert
         await _repo.DidNotReceive().AddAsync(Arg.Any<JobPosting>());

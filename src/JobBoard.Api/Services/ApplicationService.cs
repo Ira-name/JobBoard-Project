@@ -57,4 +57,8 @@ public class ApplicationService : IApplicationService
 
         await _applicationRepository.SaveChangesAsync();
     }
+    public async Task<Application?> GetByIdAsync(Guid id)
+    {
+        return await _applicationRepository.GetByIdAsync(id);
+    }
 }

@@ -12,21 +12,10 @@ public class JobService : IJobService
     {
         _jobRepository = jobRepository;
     }
-
-    /*public async Task<IEnumerable<JobPosting>> GetActiveJobsAsync(string? location, JobType? type, decimal? minSalary)
-    {
-        var jobs = await _jobRepository.GetAllAsync();
-        
-        return jobs
-            .Where(j => j.IsActive)
-            .Where(j => location == null || j.Location == location)
-            .Where(j => type == null || j.Type == type)
-            .Where(j => minSalary == null || j.SalaryMin >= minSalary);
-    }*/
     
     public async Task<IEnumerable<JobPosting>> GetActiveJobsAsync(string? location, JobType? type, decimal? minSalary)
     {
-        var query = _jobRepository.Query(); // повертає IQueryable
+        var query = _jobRepository.Query();
 
         query = query
             .Where(j => j.IsActive)

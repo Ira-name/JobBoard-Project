@@ -40,4 +40,14 @@ public class ApplicationsController : ControllerBase
 
         return NoContent();
     }
+    [HttpGet("applications/{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var app = await _applicationService.GetByIdAsync(id);
+
+        if (app == null)
+            return NotFound();
+
+        return Ok(ApplicationDto.FromModel(app));
+    }
 }
