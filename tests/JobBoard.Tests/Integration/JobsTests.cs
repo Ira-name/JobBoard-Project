@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using JobBoard.Api.Data;
 using JobBoard.Api.DTOs;
+using JobBoard.Api.DTOs.Company;
 using JobBoard.Api.Models;
 using JobBoard.Tests.Common;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,16 +24,27 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
 
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Create_ValidJob_Returns200()
+    public async Task Create_ValidJob_Returns200()// Створення валідної вакансії повертає статус 200 OK
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        // Arrange 
+        var company = new CreateCompanyDto(
+            Name: "Test Company",
+            Description: "Desc",
+            Website: "https://test.com",
+            Industry: "IT",
+            LogoUrl: "logo.png"
+        );
 
-        var companyId = db.Companies.First().Id;
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", company);
+        companyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
+        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
+        createdCompany.ShouldNotBeNull();
+
+        // Arrange
         var job = new
         {
-            CompanyId = companyId,
+            CompanyId = createdCompany.Id,
             Title = "Backend Developer",
             Description = "Test",
             Location = "Lviv",
@@ -42,8 +54,10 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
             ExpiresAt = DateTime.UtcNow.AddDays(10)
         };
 
+        // Act
         var response = await _client.PostAsJsonAsync("/api/jobs", job);
 
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var created = await response.Content.ReadFromJsonAsync<JobDto>();
@@ -55,11 +69,24 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task GetAll_FiltersByLocation_ReturnsCorrectJobs()
+    public async Task GetAll_FiltersByLocation_ReturnsCorrectJobs()//Отримання всіх вакансій з фільтром по локації повертає правильні результати
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var companyId = db.Companies.First().Id;
+        // Arrange
+        var company = new CreateCompanyDto(
+            Name: "Test Company",
+            Description: "Desc",
+            Website: "https://test.com",
+            Industry: "IT",
+            LogoUrl: "logo.png"
+        );
+
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", company);
+        companyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
+        createdCompany.ShouldNotBeNull();
+
+        var companyId = createdCompany.Id;
 
         // Arrange
         var job1 = new CreateJobDto(
@@ -90,7 +117,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         var post2 = await _client.PostAsJsonAsync("/api/jobs", job2);
         post2.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        // Act
+        // Act 
         var response = await _client.GetAsync("/api/jobs?location=Lviv");
 
         // Assert
@@ -102,18 +129,29 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         jobs.ShouldNotBeEmpty();
         jobs.ShouldAllBe(j => j.Location == "Lviv");
     }
+    
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Apply_ToJob_Returns200_AndCreatesApplication()
+    public async Task Apply_ToJob_Returns200_AndCreatesApplication()//Подання заявки на вакансію повертає 200 OK і створює запис Application
     {
         // Arrange
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var company = new CreateCompanyDto(
+            Name: "Test Company",
+            Description: "Desc",
+            Website: "https://test.com",
+            Industry: "IT",
+            LogoUrl: "logo.png"
+        );
 
-        var companyId = db.Companies.First().Id;
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", company);
+        companyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
+        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
+        createdCompany.ShouldNotBeNull();
+
+        // Arrange 
         var job = new CreateJobDto(
-            companyId,
+            createdCompany.Id,
             "QA Engineer",
             "Test",
             "Lviv",
@@ -124,7 +162,10 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         );
 
         var jobResponse = await _client.PostAsJsonAsync("/api/jobs", job);
+        jobResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
         var createdJob = await jobResponse.Content.ReadFromJsonAsync<JobDto>();
+        createdJob.ShouldNotBeNull();
 
         var applyDto = new ApplyDto(
             "Ira",
@@ -135,7 +176,7 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
 
         // Act
         var response = await _client.PostAsJsonAsync(
-            $"/api/jobs/{createdJob!.Id}/apply",
+            $"/api/jobs/{createdJob.Id}/apply",
             applyDto
         );
 
@@ -148,18 +189,27 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         application.Email.ShouldBe("ira@test.com");
         application.Status.ShouldBe(ApplicationStatus.Pending);
     }
+    
+    
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Update_Application_Status_Works()
+    public async Task Update_Application_Status_Works()//“Оновлення статусу заявки працює коректно
     {
         // Arrange
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var company = new CreateCompanyDto(
+            "Test Company",
+            "Desc",
+            "https://test.com",
+            "IT",
+            "logo.png"
+        );
 
-        var companyId = db.Companies.First().Id;
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", company);
+        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
 
+        // Arrange
         var job = new CreateJobDto(
-            companyId,
+            createdCompany!.Id,
             "Backend",
             "Test",
             "Lviv",
@@ -172,12 +222,8 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         var jobResponse = await _client.PostAsJsonAsync("/api/jobs", job);
         var createdJob = await jobResponse.Content.ReadFromJsonAsync<JobDto>();
 
-        var applyDto = new ApplyDto(
-            "Ira",
-            "ira@test.com",
-            "url",
-            "text"
-        );
+        // Arrange
+        var applyDto = new ApplyDto("Ira", "ira@test.com", "url", "text");
 
         var applyResponse = await _client.PostAsJsonAsync(
             $"/api/jobs/{createdJob!.Id}/apply",
@@ -194,19 +240,23 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
             updateDto
         );
 
-        // Assert
+        // Assert (1) 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        
-        using var scope2 = _factory.Services.CreateScope();
-        var db2 = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var updated = db2.Applications.First(a => a.Id == application!.Id);
+        // Assert (2) 
+        var getResponse = await _client.GetAsync($"/api/applications/{application.Id}");
+        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
+        var updated = await getResponse.Content.ReadFromJsonAsync<ApplicationDto>();
+
+        updated.ShouldNotBeNull();
         updated.Status.ShouldBe(ApplicationStatus.Accepted);
     }
+    
+    
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Cannot_Apply_To_Expired_Job()
+    public async Task Cannot_Apply_To_Expired_Job()//Не можна подати заявку на прострочену вакансію
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -243,9 +293,10 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
         
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+    
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task GetAll_DoesNotReturnExpiredJobs()
+    public async Task GetAll_DoesNotReturnExpiredJobs()//GET /api/jobs не повертає прострочені вакансії
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -287,15 +338,25 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Cannot_Apply_Twice_With_Same_Email()
+    public async Task Cannot_Apply_Twice_With_Same_Email()//Не можна подати дві заявки з однаковим email
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        // Arrange
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", new CreateCompanyDto(
+            Name: "Test Company",
+            Description: "Test",
+            Website: "https://test.com",
+            Industry: "IT",
+            LogoUrl: "logo.png"
+        ));
 
-        var companyId = db.Companies.First().Id;
-        
-        var job = new CreateJobDto(
-            companyId,
+        companyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var company = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
+        company.ShouldNotBeNull();
+
+        // Arrange
+        var jobResponse = await _client.PostAsJsonAsync("/api/jobs", new CreateJobDto(
+            company.Id,
             "Frontend",
             "Test",
             "Lviv",
@@ -303,10 +364,12 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
             2000,
             JobType.FullTime,
             DateTime.UtcNow.AddDays(10)
-        );
+        ));
 
-        var jobResponse = await _client.PostAsJsonAsync("/api/jobs", job);
-        var createdJob = await jobResponse.Content.ReadFromJsonAsync<JobDto>();
+        jobResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var job = await jobResponse.Content.ReadFromJsonAsync<JobDto>();
+        job.ShouldNotBeNull();
 
         var applyDto = new ApplyDto(
             "Ira",
@@ -314,48 +377,64 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
             "url",
             "text"
         );
-        
+
+        // Act
         var first = await _client.PostAsJsonAsync(
-            $"/api/jobs/{createdJob!.Id}/apply",
+            $"/api/jobs/{job.Id}/apply",
             applyDto
         );
 
+        // Assert
         first.StatusCode.ShouldBe(HttpStatusCode.OK);
-        
+
+        // Act
         var second = await _client.PostAsJsonAsync(
-            $"/api/jobs/{createdJob.Id}/apply",
+            $"/api/jobs/{job.Id}/apply",
             applyDto
         );
-        
+
+        // Assert
         second.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task CreateJob_InvalidSalary_ReturnsBadRequest()
+    public async Task CreateJob_InvalidSalary_ReturnsBadRequest()//Створення вакансії з некоректною зарплатою повертає помилку
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        // Arrange 
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", new CreateCompanyDto(
+            Name: "Test Company",
+            Description: "Test",
+            Website: "https://test.com",
+            Industry: "IT",
+            LogoUrl: "logo.png"
+        ));
 
-        var companyId = db.Companies.First().Id;
+        companyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
+        var company = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
+        company.ShouldNotBeNull();
+
+        // Arrange 
         var job = new CreateJobDto(
-            companyId,
+            company.Id,
             "Bad Salary Job",
             "Test",
             "Lviv",
-            3000, 
-            1000, 
+            3000,
+            1000,
             JobType.FullTime,
             DateTime.UtcNow.AddDays(10)
         );
 
+        // Act
         var response = await _client.PostAsJsonAsync("/api/jobs", job);
 
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Update_Status_For_NonExisting_Application_Returns404()
+    public async Task Update_Status_For_NonExisting_Application_Returns404()//Оновлення статусу неіснуючої заявки повертає 404
     {
         var fakeId = Guid.NewGuid();
 
@@ -371,15 +450,22 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
     
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task Cannot_Apply_To_Inactive_Job()
+    public async Task Cannot_Apply_To_Inactive_Job()//Не можна подати заявку на неактивну вакансію
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        // Arrange 
+        var companyResponse = await _client.PostAsJsonAsync("/api/companies", new CreateCompanyDto(
+            "Test Company",
+            "Test",
+            "https://test.com",
+            "IT",
+            "logo.png"
+        ));
 
-        var companyId = db.Companies.First().Id;
+        var company = await companyResponse.Content.ReadFromJsonAsync<CompanyDto>();
 
-        var job = new CreateJobDto(
-            companyId,
+        // Arrange — job
+        var jobResponse = await _client.PostAsJsonAsync("/api/jobs", new CreateJobDto(
+            company!.Id,
             "Inactive Job",
             "Test",
             "Lviv",
@@ -387,24 +473,23 @@ public class JobsTests : IClassFixture<CustomWebApplicationFactory>
             2000,
             JobType.FullTime,
             DateTime.UtcNow.AddDays(10)
-        );
+        ));
 
-        var jobResponse = await _client.PostAsJsonAsync("/api/jobs", job);
-        var createdJob = await jobResponse.Content.ReadFromJsonAsync<JobDto>();
+        var job = await jobResponse.Content.ReadFromJsonAsync<JobDto>();
         
-        var entity = db.JobPostings.First(j => j.Id == createdJob!.Id);
-        entity.IsActive = false;
-        await db.SaveChangesAsync();
+        var closeResponse = await _client.DeleteAsync($"/api/jobs/{job!.Id}");
+        closeResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
+        // Act
         var applyDto = new ApplyDto("Ira", "ira@test.com", "url", "text");
 
         var response = await _client.PostAsJsonAsync(
-            $"/api/jobs/{createdJob.Id}/apply",
+            $"/api/jobs/{job.Id}/apply",
             applyDto
         );
 
+        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
-    
     
 }
